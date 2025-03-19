@@ -1,85 +1,135 @@
-import type { User } from "@/types";
+import axios from "axios";
 import { defineStore } from "pinia";
-import { ref } from "vue";
 
-export const useAuthStore = defineStore("auth", () => {
-  const user = ref<User | null>(null);
-  const isAuthenticated = ref(false);
-  const loading = ref(false);
-  const error = ref<string | null>(null);
+interface User {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  username?: string;
+  phone?: string;
+  description?: string;
+  roleId: number;
+  role?: {
+    id: number;
+    name: string;
+  };
+}
 
-  const login = async (email: string, password: string) => {
-    loading.value = true;
-    error.value = null;
+interface UserRegisterData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  username?: string | null;
+  phone?: string | null;
+  birthDate?: string | null;
+  description?: string | null;
+}
 
-    try {
-      const response = await fetch("http://localhost:3000/api/auth/login", {
-        method: "POST",
-        body: JSON.stringify({ email, password }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+export const useAuthStore = defineStore("auth", {
+  state: () => ({
+    user: null as User | null,
+    token: localStorage.getItem("token") || null,
+    loading: false,
+    error: null as string | null,
+  }),
 
-      if (!response.ok) {
-        throw new Error("Failed to login");
+  getters: {
+    isAuthenticated: (state) => !!state.token && !!state.user,
+    userFullName: (state) => {
+      if (!state.user) return "";
+      return `${state.user.firstName} ${state.user.lastName}`;
+    },
+  },
+
+  actions: {
+    async register(userData: UserRegisterData): Promise<boolean> {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const response = await axios.post("/api/users/register", userData);
+
+        // Optionnellement, connecter automatiquement l'utilisateur après l'inscription
+        // this.user = response.data.user;
+        // this.token = response.data.token;
+        // localStorage.setItem('token', response.data.token);
+
+        return true;
+      } catch (error: any) {
+        if (error.response && error.response.data) {
+          this.error =
+            error.response.data.message || "Erreur lors de l'inscription";
+        } else {
+          this.error = "Erreur de connexion au serveur";
+        }
+        return false;
+      } finally {
+        this.loading = false;
       }
+    },
 
-      const data = await response.json();
-      user.value = data.user;
-      isAuthenticated.value = true;
+    async login(email: string, password: string): Promise<boolean> {
+      this.loading = true;
+      this.error = null;
 
-      return data;
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : "An error occurred";
-      throw err;
-    } finally {
-      loading.value = false;
-    }
-  };
+      try {
+        const response = await axios.post("/api/users/login", {
+          email,
+          password,
+        });
 
-  const logout = async () => {
-    user.value = null;
-    isAuthenticated.value = false;
-  };
+        this.user = response.data.user;
+        this.token = response.data.token;
 
-  const register = async (email: string, password: string) => {
-    loading.value = true;
-    error.value = null;
+        // Stocker le token dans le localStorage
+        localStorage.setItem("token", response.data.token);
 
-    try {
-      const response = await fetch("http://localhost:3000/api/auth/register", {
-        method: "POST",
-        body: JSON.stringify({ email, password }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+        // Configurer l'en-tête d'autorisation pour les futures requêtes
+        axios.defaults.headers.common["Authorization"] = `Bearer ${this.token}`;
 
-      if (!response.ok) {
-        throw new Error("Failed to register");
+        return true;
+      } catch (error: any) {
+        if (error.response && error.response.data) {
+          this.error = error.response.data.message || "Identifiants incorrects";
+        } else {
+          this.error = "Erreur de connexion au serveur";
+        }
+        return false;
+      } finally {
+        this.loading = false;
       }
+    },
 
-      const data = await response.json();
-      user.value = data.user;
-      isAuthenticated.value = true;
+    async fetchUserProfile(): Promise<boolean> {
+      if (!this.token) return false;
 
-      return data;
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : "An error occurred";
-      throw err;
-    } finally {
-      loading.value = false;
-    }
-  };
+      this.loading = true;
 
-  return {
-    user,
-    isAuthenticated,
-    loading,
-    error,
-    login,
-    register,
-    logout,
-  };
+      try {
+        // Configurer l'en-tête d'autorisation
+        axios.defaults.headers.common["Authorization"] = `Bearer ${this.token}`;
+
+        const response = await axios.get("/api/users/profile");
+        this.user = response.data;
+        return true;
+      } catch (error: any) {
+        if (error.response && error.response.status === 401) {
+          // Token expiré ou invalide
+          this.logout();
+        }
+        return false;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    logout() {
+      this.user = null;
+      this.token = null;
+      localStorage.removeItem("token");
+      delete axios.defaults.headers.common["Authorization"];
+    },
+  },
 });
