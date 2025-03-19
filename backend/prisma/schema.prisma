@@ -1,0 +1,59 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id             Int       @id @default(autoincrement()) @map("id_user")
+  lastName       String    @map("name_user") @db.Char(20)
+  firstName      String    @map("first_name_user") @db.Char(20)
+  username       String?   @map("username_user") @db.Char(20)
+  phone          String?   @unique @map("phone_user") @db.Char(10)
+  password       String    @map("pwd_user") @db.Char(255)
+  birthDate      DateTime? @map("date_birthday_user") @db.Date
+  email          String    @unique @map("email_user") @db.Char(50)
+  inscriptionDate DateTime? @map("date_inscription") @db.Date
+  description    String?   @map("description_user") @db.Char(255)
+  roleId         Int       @map("id_role")
+  houseId        Int?      @map("id_house")
+  role           UserRole  @relation(fields: [roleId], references: [id])
+  house          House?    @relation(fields: [houseId], references: [id])
+  
+  @@map("users")
+}
+
+model UserRole {
+  id    Int     @id @default(autoincrement()) @map("id_role")
+  name  String  @unique @map("name_role") @db.Char(20)
+  users User[]
+  
+  @@map("user_roles")
+}
+
+model House {
+  id          Int      @id @default(autoincrement()) @map("id_house")
+  name        String   @unique @map("name_house") @db.Char(64)
+  address     String?  @map("adress") @db.Char(255)
+  city        String?  @map("city") @db.Char(64)
+  postalCode  String?  @map("postal_code") @db.Char(10)
+  country     String?  @map("country") @db.Char(64)
+  description String?  @map("description_house") @db.Char(255)
+  users       User[]
+  
+  @@map("houses")
+}
+
+
+
+

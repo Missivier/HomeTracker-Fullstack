@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  # Service pour la base de données PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: hometracker-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=alexandre
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=hometracker_db
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  # Service pour administrer la base de données
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: hometracker-pgadmin
+    restart: unless-stopped
+    ports:
+      - "5050:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=alexandre@gmail.com
+      - PGADMIN_DEFAULT_PASSWORD=root
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+
+volumes:
+  postgres-data:
+  pgadmin-data:
+
+networks:
+  app-network:
+    driver: bridge
