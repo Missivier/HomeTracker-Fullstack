@@ -1,4 +1,5 @@
-import axios from "axios";
+import router from "@/router";
+import api from "@/services/api";
 import { defineStore } from "pinia";
 
 interface User {
@@ -11,8 +12,13 @@ interface User {
   description?: string;
   roleId: number;
   role?: {
+    name: string;
+  };
+  houseId?: number;
+  house?: {
     id: number;
     name: string;
+    address?: string;
   };
 }
 
@@ -41,6 +47,7 @@ export const useAuthStore = defineStore("auth", {
       if (!state.user) return "";
       return `${state.user.firstName} ${state.user.lastName}`;
     },
+    hasHouse: (state) => !!state.user?.houseId,
   },
 
   actions: {
@@ -49,15 +56,10 @@ export const useAuthStore = defineStore("auth", {
       this.error = null;
 
       try {
-        const response = await axios.post("/api/users/register", userData);
-
-        // Optionnellement, connecter automatiquement l'utilisateur après l'inscription
-        // this.user = response.data.user;
-        // this.token = response.data.token;
-        // localStorage.setItem('token', response.data.token);
-
+        const response = await api.post("/users/register", userData);
         return true;
       } catch (error: any) {
+        console.error("Erreur d'inscription:", error);
         if (error.response && error.response.data) {
           this.error =
             error.response.data.message || "Erreur lors de l'inscription";
@@ -75,7 +77,7 @@ export const useAuthStore = defineStore("auth", {
       this.error = null;
 
       try {
-        const response = await axios.post("/api/users/login", {
+        const response = await api.post("/users/login", {
           email,
           password,
         });
@@ -86,11 +88,9 @@ export const useAuthStore = defineStore("auth", {
         // Stocker le token dans le localStorage
         localStorage.setItem("token", response.data.token);
 
-        // Configurer l'en-tête d'autorisation pour les futures requêtes
-        axios.defaults.headers.common["Authorization"] = `Bearer ${this.token}`;
-
         return true;
       } catch (error: any) {
+        console.error("Erreur de connexion:", error);
         if (error.response && error.response.data) {
           this.error = error.response.data.message || "Identifiants incorrects";
         } else {
@@ -108,13 +108,11 @@ export const useAuthStore = defineStore("auth", {
       this.loading = true;
 
       try {
-        // Configurer l'en-tête d'autorisation
-        axios.defaults.headers.common["Authorization"] = `Bearer ${this.token}`;
-
-        const response = await axios.get("/api/users/profile");
+        const response = await api.get("/users/profile");
         this.user = response.data;
         return true;
       } catch (error: any) {
+        console.error("Erreur de récupération du profil:", error);
         if (error.response && error.response.status === 401) {
           // Token expiré ou invalide
           this.logout();
@@ -125,11 +123,41 @@ export const useAuthStore = defineStore("auth", {
       }
     },
 
+    // Méthode pour rediriger l'utilisateur en fonction de son état d'authentification
+    async handleAuthRedirect() {
+      // Si l'utilisateur n'est pas connecté
+      if (!this.token) {
+        router.push("/auth/login");
+        return;
+      }
+
+      // Si l'utilisateur a un token mais pas de profil, essayer de le récupérer
+      if (this.token && !this.user) {
+        try {
+          const success = await this.fetchUserProfile();
+          if (!success) {
+            router.push("/auth/login");
+            return;
+          }
+        } catch (error) {
+          router.push("/auth/login");
+          return;
+        }
+      }
+
+      // Rediriger selon que l'utilisateur a une maison ou non
+      if (this.user?.houseId) {
+        router.push("/dashboard");
+      } else {
+        router.push("/house/select");
+      }
+    },
+
     logout() {
       this.user = null;
       this.token = null;
       localStorage.removeItem("token");
-      delete axios.defaults.headers.common["Authorization"];
+      router.push("/auth/login");
     },
   },
 });

@@ -1,0 +1,15 @@
+1. Jetons JWT (JSON Web Token)
+Implémentation :
+Vous utilisez correctement les jetons JWT pour l'authentification.
+Les jetons sont générés lorsqu'un utilisateur se connecte avec succès dans authController.ts.
+Chaque jeton contient les informations essentielles : ID utilisateur, email et rôle.
+Les jetons expirent après 1 jour (expiresIn: "1d").
+Le secret JWT est stocké dans une variable d'environnement, ce qui est une bonne pratique.
+Stockage et transmission :
+Côté frontend, le token est stocké dans le localStorage.
+Axios configure automatiquement les en-têtes d'autorisation pour les requêtes API qui ne sont pas publiques.
+Vous utilisez correctement le format Bearer token pour l'en-tête Authorization.
+Vérification :
+Le middleware authenticateUser vérifie la validité du jeton pour les routes protégées.
+Il décode également le jeton et ajoute les informations de l'utilisateur à la requête.
+Vous effectuez une vérification supplémentaire pour confirmer que l'utilisateur existe toujours dans la base de données.

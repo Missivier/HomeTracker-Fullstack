@@ -1,0 +1,14 @@
+Backend :
+Les routes sont bien protégées par le middleware authenticateUser.
+Les routes publiques (inscription, connexion) ne sont pas protégées.
+Les routes sensibles comme /api/houses nécessitent une authentification.
+Frontend :
+Vous avez mis en place plusieurs middleware de navigation Vue Router :
+requireAuth : vérifie si l'utilisateur est authentifié
+requireNoHouse : vérifie si l'utilisateur n'a pas encore de maison
+requireHouse : vérifie si l'utilisateur a une maison
+redirectIfAuthenticated : redirige les utilisateurs déjà authentifiés
+Ces middlewares fonctionnent ensemble pour créer un flux d'authentification complet :
+Les utilisateurs non connectés sont redirigés vers la page de connexion
+Les utilisateurs connectés sans maison sont dirigés vers la sélection de maison
+Les utilisateurs connectés avec une maison sont dirigés vers le tableau de bord
