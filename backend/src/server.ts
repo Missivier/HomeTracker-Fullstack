@@ -11,7 +11,7 @@ dotenv.config();
 
 // Log pour vérifier les variables d'environnement
 console.log("Vérification de l'environnement:", {
-  PORT: process.env.PORT || 3000,
+  PORT: process.env.SERVER_PORT || 3000,
   FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:5173",
   JWT_SECRET_EXISTS: !!process.env.JWT_SECRET,
   DATABASE_URL_EXISTS: !!process.env.DATABASE_URL,
