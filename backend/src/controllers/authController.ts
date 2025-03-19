@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcrypt";
+import bcryptjs from "bcryptjs";
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
@@ -80,9 +80,9 @@ export const register = async (req: Request, res: Response) => {
       }
     }
 
-    // Récupérer le rôle "USER" par défaut
+    // Récupérer le rôle "NO_ROLE" par défaut
     const userRole = await prisma.userRole.findFirst({
-      where: { name: "USER" },
+      where: { name: "NO_ROLE" },
     });
 
     if (!userRole) {
@@ -92,7 +92,7 @@ export const register = async (req: Request, res: Response) => {
     }
 
     // Hasher le mot de passe
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const hashedPassword = await bcryptjs.hash(password, saltRounds);
 
     // Créer l'utilisateur
     const newUser = await prisma.user.create({
@@ -164,7 +164,7 @@ export const login = async (req: Request, res: Response) => {
     }
 
     // Vérifier le mot de passe
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcryptjs.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(401).json({ message: "Identifiants incorrects" });
     }

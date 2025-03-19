@@ -6,11 +6,15 @@ const prisma = new PrismaClient();
 
 // Interface pour étendre la requête Express avec l'utilisateur
 interface AuthRequest extends Request {
-  user?: jwt.JwtPayload | string;
+  user: {
+    id: number;
+    email: string;
+    role: string;
+  };
 }
 
 export const authenticateUser = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {
@@ -22,12 +26,21 @@ export const authenticateUser = async (
     }
 
     const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
-    req.user = decoded;
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET as string
+    ) as jwt.JwtPayload;
+
+    // Ajouter les informations utilisateur à la requête
+    (req as AuthRequest).user = {
+      id: decoded.id,
+      email: decoded.email,
+      role: decoded.role,
+    };
 
     // Optionnellement, vérifier si l'utilisateur existe toujours dans la base de données
     const userExists = await prisma.user.findUnique({
-      where: { id: (decoded as jwt.JwtPayload).id },
+      where: { id: decoded.id },
     });
 
     if (!userExists) {
