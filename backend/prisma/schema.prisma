@@ -20,7 +20,7 @@ model User {
   firstName      String    @map("first_name_user") @db.Char(20)
   username       String?   @map("username_user") @db.Char(20)
   phone          String?   @unique @map("phone_user") @db.Char(10)
-  password       String    @map("pwd_user") @db.Char(255)
+  password       String    @map("pwd_user") @db.VarChar(255)
   birthDate      DateTime? @map("date_birthday_user") @db.Date
   email          String    @unique @map("email_user") @db.Char(50)
   inscriptionDate DateTime? @map("date_inscription") @db.Date

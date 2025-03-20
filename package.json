@@ -5,7 +5,11 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "concurrently \"pnpm --filter backend dev\" \"pnpm --filter frontend dev\""
+    "start": "concurrently \"pnpm --filter backend start\" \"pnpm --filter frontend start\"",
+    "build": "concurrently \"pnpm --filter backend build\" \"pnpm --filter frontend build\"",
+    "install": "concurrently \"pnpm --filter backend install\" \"pnpm --filter frontend install\"",
+    "dev": "concurrently \"pnpm --filter backend dev\" \"pnpm --filter frontend dev\"",
+    "stop": "concurrently \"pnpm --filter backend stop\" \"pnpm --filter frontend stop\""
   },
   "keywords": [],
   "author": "",

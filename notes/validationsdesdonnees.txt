@@ -1,0 +1,7 @@
+Mise en œuvre avec Zod :
+Vous utilisez la bibliothèque Zod pour la validation des données, ce qui est excellent.
+Les schémas de validation sont bien définis pour l'inscription et la connexion.
+Points forts :
+Validation de l'email avec le format correct.
+Validation de la longueur minimale du mot de passe (6 caractères minimum).
+Messages d'erreur personnalisés pour chaque type de validation.
